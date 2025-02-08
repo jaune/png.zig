@@ -1,0 +1,14 @@
+.{
+    .name = "png.zig/examples/dump_head",
+    .version = "0.0.0",
+    .dependencies = .{
+        .@"png.zig" = .{
+            .path = "../..",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
