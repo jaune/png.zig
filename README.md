@@ -5,5 +5,5 @@ decode png files in zig.
 ## credits
 - https://lodev.org/lodepng/
 
-## References
+## references
 - https://www.w3.org/TR/png/

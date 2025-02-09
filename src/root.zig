@@ -1,6 +1,28 @@
 const std = @import("std");
 const crc32reader = @import("crc32_reader.zig");
 
+pub const NormalizedColor = struct {
+    red: f32 = 0,
+    green: f32 = 0,
+    blue: f32 = 0,
+    alpha: f32 = 1,
+
+    pub fn initGray(value: f32) NormalizedColor {
+        return .{
+            .red = value,
+            .green = value,
+            .blue = value,
+            .alpha = 1,
+        };
+    }
+};
+
+fn normalizeInt(value: anytype) f32 {
+    const uN: type = comptime @TypeOf(value);
+
+    return @as(f32, @floatFromInt(value)) / @as(f32, @floatFromInt(std.math.maxInt(uN)));
+}
+
 pub const ImageUnmanaged = struct {
     const Self = @This();
 
@@ -15,8 +37,6 @@ pub const ImageUnmanaged = struct {
         const line_size: usize = (w * bpp + 7) / 8;
         const data_size: usize = line_size * height;
 
-        std.log.debug("ImageUnmanaged.init(): image_size: {}", .{data_size});
-
         return .{
             .width = width,
             .height = height,
@@ -30,7 +50,7 @@ pub const ImageUnmanaged = struct {
         self.* = undefined;
     }
 
-    pub fn get(self: *const Self, x: u32, y: u32) !u64 {
+    pub fn get(self: *const Self, x: u32, y: u32) !NormalizedColor {
         if (x >= self.width) {
             return error.OutOfBounds;
         }
@@ -42,80 +62,149 @@ pub const ImageUnmanaged = struct {
 
         switch (self.pixel_format) {
             .greyscale_1 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.greyscale_1)), .big).init(self.data, self.width * self.height);
+                const bpp = comptime PixelFormat.getBitsPerPixel(.greyscale_1);
+                const uN = comptime std.meta.Int(.unsigned, bpp);
 
-                return slice.get(i);
+                const byte_index = i * bpp / 8;
+                const bit_index = (i * bpp) % 8;
+
+                const bit_shift: u3 = @intCast(bit_index);
+
+                const v = @as(uN, @truncate(@bitReverse(self.data[byte_index]) >> bit_shift));
+
+                const normalized: f32 = @as(f32, @floatFromInt(v)) / @as(f32, @floatFromInt(std.math.maxInt(uN)));
+
+                // std.log.debug("{},{}: pixel_index={}, byte_index={}, bit_index={}, byte={b:0>8}, bitReverse={b:0>8}, v={}", .{ x, y, i, byte_index, bit_index, self.data[byte_index], @bitReverse(self.data[byte_index]), v });
+
+                return NormalizedColor.initGray(normalized);
             },
             .greyscale_2 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.greyscale_2)), .big).init(self.data, self.width * self.height);
+                const bpp = comptime PixelFormat.getBitsPerPixel(.greyscale_2);
+                const uN = comptime std.meta.Int(.unsigned, bpp);
 
-                return slice.get(i);
+                const byte_index = i * bpp / 8;
+                const bit_index = (i * bpp) % 8;
+
+                const bit_shift: u3 = @intCast(bit_index);
+
+                const v = @as(uN, @truncate(self.data[byte_index] >> bit_shift));
+
+                // std.log.debug("{},{}: pixel_index={}, byte_index={}, bit_index={}, byte={b:0>8}, bitReverse={b:0>8}, v={}", .{ x, y, i, byte_index, bit_index, self.data[byte_index], @bitReverse(self.data[byte_index]), v });
+
+                return NormalizedColor.initGray(normalizeInt(v));
             },
             .greyscale_4 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.greyscale_4)), .big).init(self.data, self.width * self.height);
+                const bpp = comptime PixelFormat.getBitsPerPixel(.greyscale_4);
+                const uN = comptime std.meta.Int(.unsigned, bpp);
 
-                return slice.get(i);
+                const byte_index = i * bpp / 8;
+                const bit_index = (i * bpp) % 8;
+
+                const bit_shift: u3 = @intCast(bit_index);
+
+                const v = @as(uN, @truncate(self.data[byte_index] >> bit_shift));
+
+                // std.log.debug("{},{}: pixel_index={}, byte_index={}, bit_index={}, byte={b:0>8}, bitReverse={b:0>8}, v={}", .{ x, y, i, byte_index, bit_index, self.data[byte_index], @bitReverse(self.data[byte_index]), v });
+
+                return NormalizedColor.initGray(normalizeInt(v));
             },
             .greyscale_8 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.greyscale_8)), .big).init(self.data, self.width * self.height);
+                const v = self.data[i];
 
-                return slice.get(i);
+                return NormalizedColor.initGray(normalizeInt(v));
             },
             .greyscale_16 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.greyscale_16)), .big).init(self.data, self.width * self.height);
+                const bpp = comptime PixelFormat.getBitsPerPixel(.greyscale_16);
+                const uN = comptime std.meta.Int(.unsigned, bpp);
 
-                return slice.get(i);
+                const byte_index = i * bpp / 8;
+
+                const v = std.mem.readPackedInt(uN, self.data[byte_index .. byte_index + 2], 0, .big);
+
+                return NormalizedColor.initGray(normalizeInt(v));
             },
             .truecolour_8 => {
-                const bpp = comptime PixelFormat.getBitsPerPixel(.truecolour_8);
-                const Int = comptime std.meta.Int(.unsigned, bpp);
-
-                return std.mem.readPackedInt(Int, self.data, i * bpp, .big);
+                return .{
+                    .red = normalizeInt(self.data[i * 3]),
+                    .green = normalizeInt(self.data[i * 3 + 1]),
+                    .blue = normalizeInt(self.data[i * 3 + 2]),
+                    .alpha = 1,
+                };
             },
             .truecolour_16 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.truecolour_16)), .big).init(self.data, self.width * self.height);
+                const bpp = comptime PixelFormat.getBitsPerPixel(.greyscale_16);
+                const uN = comptime std.meta.Int(.unsigned, bpp);
 
-                return slice.get(i);
-            },
-            .indexed_colour_1 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.indexed_colour_1)), .big).init(self.data, self.width * self.height);
+                const byte_index = i * 2 * 3;
 
-                return slice.get(i);
-            },
-            .indexed_colour_2 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.indexed_colour_2)), .big).init(self.data, self.width * self.height);
+                const r = std.mem.readPackedInt(uN, self.data[byte_index .. byte_index + 2], 0, .big);
+                const g = std.mem.readPackedInt(uN, self.data[byte_index + 2 .. byte_index + 4], 0, .big);
+                const b = std.mem.readPackedInt(uN, self.data[byte_index + 4 .. byte_index + 6], 0, .big);
 
-                return slice.get(i);
+                return .{
+                    .red = normalizeInt(r),
+                    .green = normalizeInt(g),
+                    .blue = normalizeInt(b),
+                    .alpha = 1,
+                };
             },
-            .indexed_colour_4 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.indexed_colour_4)), .big).init(self.data, self.width * self.height);
 
-                return slice.get(i);
-            },
-            .indexed_colour_8 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.indexed_colour_8)), .big).init(self.data, self.width * self.height);
-
-                return slice.get(i);
-            },
             .greyscale_with_alpha_8 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.greyscale_with_alpha_8)), .big).init(self.data, self.width * self.height);
+                const normalized = normalizeInt(self.data[i * 2]);
 
-                return slice.get(i);
+                return .{
+                    .red = normalized,
+                    .green = normalized,
+                    .blue = normalized,
+                    .alpha = normalizeInt(self.data[i * 2 + 1]),
+                };
             },
             .greyscale_with_alpha_16 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.greyscale_with_alpha_16)), .big).init(self.data, self.width * self.height);
+                const bpp = comptime PixelFormat.getBitsPerPixel(.greyscale_16);
+                const uN = comptime std.meta.Int(.unsigned, bpp);
 
-                return slice.get(i);
+                const byte_index = i * 2 * 2;
+
+                const v = std.mem.readPackedInt(uN, self.data[byte_index .. byte_index + 2], 0, .big);
+                const a = std.mem.readPackedInt(uN, self.data[byte_index + 2 .. byte_index + 4], 0, .big);
+
+                const normalized = normalizeInt(v);
+
+                return .{
+                    .red = normalized,
+                    .green = normalized,
+                    .blue = normalized,
+                    .alpha = normalizeInt(a),
+                };
             },
             .truecolour_with_alpha_8 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.truecolour_with_alpha_8)), .big).init(self.data, self.width * self.height);
-
-                return slice.get(i);
+                return .{
+                    .red = normalizeInt(self.data[i * 4]),
+                    .green = normalizeInt(self.data[i * 4 + 1]),
+                    .blue = normalizeInt(self.data[i * 4 + 2]),
+                    .alpha = normalizeInt(self.data[i * 4 + 3]),
+                };
             },
             .truecolour_with_alpha_16 => {
-                const slice = std.PackedIntSliceEndian(std.meta.Int(.unsigned, PixelFormat.getBitsPerPixel(.truecolour_with_alpha_16)), .big).init(self.data, self.width * self.height);
+                const bpp = comptime PixelFormat.getBitsPerPixel(.greyscale_16);
+                const uN = comptime std.meta.Int(.unsigned, bpp);
 
-                return slice.get(i);
+                const byte_index = i * 2 * 4;
+
+                const r = std.mem.readPackedInt(uN, self.data[byte_index .. byte_index + 2], 0, .big);
+                const g = std.mem.readPackedInt(uN, self.data[byte_index + 2 .. byte_index + 4], 0, .big);
+                const b = std.mem.readPackedInt(uN, self.data[byte_index + 4 .. byte_index + 6], 0, .big);
+                const a = std.mem.readPackedInt(uN, self.data[byte_index + 6 .. byte_index + 8], 0, .big);
+
+                return .{
+                    .red = normalizeInt(r),
+                    .green = normalizeInt(g),
+                    .blue = normalizeInt(b),
+                    .alpha = normalizeInt(a),
+                };
+            },
+            else => {
+                return error.UnsupportedPixelFormat;
             },
         }
     }
@@ -178,6 +267,8 @@ fn decodeReader(allocator: std.mem.Allocator, file_reader: anytype) !ImageUnmana
 
         const chunk_reader = limited_reader.reader();
 
+        var ignored = false;
+
         switch (head.type) {
             .IEND => {
                 end = true;
@@ -227,6 +318,7 @@ fn decodeReader(allocator: std.mem.Allocator, file_reader: anytype) !ImageUnmana
             .unknown => |u| {
                 std.log.info("ignore unknown chunk: {s} length={}", .{ u, head.length });
                 try file_reader.skipBytes(@intCast(head.length), .{});
+                ignored = true;
             },
             else => {
                 std.log.err("{s}: unsupported chunk", .{head.type.toRaw()});
@@ -234,16 +326,24 @@ fn decodeReader(allocator: std.mem.Allocator, file_reader: anytype) !ImageUnmana
             },
         }
 
-        if (limited_reader.bytes_left != 0) {
-            std.log.err("{s}: {} unreaded bytes", .{ head.type.toRaw(), limited_reader.bytes_left });
-            return error.BytesLeftToRead;
+        if (!ignored) {
+            if (limited_reader.bytes_left != 0) {
+                std.log.err("{s}: {} unreaded bytes", .{ head.type.toRaw(), limited_reader.bytes_left });
+                return error.BytesLeftToRead;
+            }
         }
 
-        const given_crc = try file_reader.readInt(u32, .big);
-        const expected_crc = crc32_chunk.final();
+        if (!ignored) {
+            const given_crc = try file_reader.readInt(u32, .big);
+            const expected_crc = crc32_chunk.final();
 
-        if (given_crc != expected_crc) {
-            return error.InvalidChunkCrc;
+            if (given_crc != expected_crc) {
+                std.log.err("{s}: invalid crc, expected={x}, given={x}", .{ head.type.toRaw(), expected_crc, given_crc });
+                return error.InvalidChunkCrc;
+            }
+        } else {
+            // NOTE: skip crc
+            try file_reader.skipBytes(4, .{});
         }
     }
 
@@ -419,11 +519,10 @@ fn reconstructFirstScanline(filter: Filter, pixel_size: usize, in: []const u8, o
         },
         // Recon(x) = Filt(x) + Recon(a)
         .sub => {
-            for (0..pixel_size) |i| {
-                out[i] = in[i];
-            }
-            for (pixel_size..in.len) |i| {
-                out[i] = in[i] +% out[i - pixel_size];
+            for (0..in.len) |i| {
+                const a = if (i < pixel_size) 0 else out[i - pixel_size];
+
+                out[i] = in[i] +% a;
             }
         },
         // Recon(x) = Filt(x) + Recon(b)
@@ -434,20 +533,18 @@ fn reconstructFirstScanline(filter: Filter, pixel_size: usize, in: []const u8, o
         },
         // Recon(x) = Filt(x) + floor((Recon(a) + Recon(b)) / 2)
         .average => {
-            for (0..pixel_size) |i| {
-                out[i] = in[i];
-            }
-            for (pixel_size..in.len) |i| {
-                out[i] = in[i] +% (out[i - pixel_size] >> 1);
+            for (0..in.len) |i| {
+                const a = if (i < pixel_size) 0 else out[i - pixel_size];
+
+                out[i] = in[i] +% (a >> 1);
             }
         },
         // Recon(x) = Filt(x) + PaethPredictor(Recon(a), Recon(b), Recon(c))
         .paeth => {
-            for (0..pixel_size) |i| {
-                out[i] = in[i];
-            }
-            for (pixel_size..in.len) |i| {
-                out[i] = in[i] +% out[i - pixel_size];
+            for (0..in.len) |i| {
+                const a = if (i < pixel_size) 0 else out[i - pixel_size];
+
+                out[i] = in[i] +% a;
             }
         },
     }
@@ -463,11 +560,10 @@ fn reconstructScanline(filter: Filter, pixel_size: usize, in: []const u8, previo
         },
         // Recon(x) = Filt(x) + Recon(a)
         .sub => {
-            for (0..pixel_size) |i| {
-                out[i] = in[i];
-            }
-            for (pixel_size..in.len) |i| {
-                out[i] = in[i] +% out[i - pixel_size];
+            for (0..in.len) |i| {
+                const a = if (i < pixel_size) 0 else out[i - pixel_size];
+
+                out[i] = in[i] +% a;
             }
         },
         // Recon(x) = Filt(x) + Recon(b)
@@ -478,37 +574,35 @@ fn reconstructScanline(filter: Filter, pixel_size: usize, in: []const u8, previo
         },
         // Recon(x) = Filt(x) + floor((Recon(a) + Recon(b)) / 2)
         .average => {
-            for (0..pixel_size) |i| {
-                out[i] = in[i];
-            }
-            for (pixel_size..in.len) |i| {
-                const a = out[i - pixel_size];
+            for (0..in.len) |i| {
+                const a = if (i < pixel_size) 0 else out[i - pixel_size];
                 const b = previous_scanline[i];
 
-                const z: u32 = a + b;
+                const z: u32 = a +% b;
 
-                out[i] +%= @truncate(z / 2);
+                out[i] = in[i] +% @as(u8, @truncate(z / 2));
             }
         },
         // Recon(x) = Filt(x) + PaethPredictor(Recon(a), Recon(b), Recon(c))
         .paeth => {
-            for (0..pixel_size) |i| {
-                out[i] = in[i];
-            }
-            for (pixel_size..in.len) |i| {
-                const a = out[i - pixel_size];
+            // std.log.debug("pixel_size={}, filter={} in[i]={}", .{ pixel_size, filter, in[0] });
+
+            for (0..in.len) |i| {
+                const a = if (i < pixel_size) 0 else out[i - pixel_size];
                 const b = previous_scanline[i];
-                const c = previous_scanline[i - pixel_size];
+                const c = if (i < pixel_size) 0 else previous_scanline[i - pixel_size];
 
-                var pa: i32 = @as(i32, @intCast(b)) - c;
-                var pb: i32 = @as(i32, @intCast(a)) - c;
-                var pc: i32 = pa + pb;
+                const a_i32: i32 = @intCast(a);
+                const b_i32: i32 = @intCast(b);
+                const c_i32: i32 = @intCast(c);
 
-                if (pa < 0) pa = -pa;
-                if (pb < 0) pb = -pb;
-                if (pc < 0) pc = -pc;
+                const p: i32 = a_i32 + b_i32 - c_i32;
 
-                out[i] +%= if (pa <= pb and pa <= pc) a else if (pb <= pc) b else c;
+                const pa = @abs(p - a_i32);
+                const pb = @abs(p - b_i32);
+                const pc = @abs(p - c_i32);
+
+                out[i] = in[i] +% if (pa <= pb and pa <= pc) a else if (pb <= pc) b else c;
             }
         },
     }
@@ -779,7 +873,7 @@ const ColorType = enum {
     }
 };
 
-const PixelFormat = enum {
+pub const PixelFormat = enum {
     greyscale_1,
     greyscale_2,
     greyscale_4,

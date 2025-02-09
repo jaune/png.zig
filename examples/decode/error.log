@@ -1,0 +1,34 @@
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn6a16.json: color_type=6 bit_depth=16
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn6a16.png: root.PixelFormat.truecolour_with_alpha_16, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\bgan6a16.json: color_type=6 bit_depth=16
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\bgan6a16.png: root.PixelFormat.truecolour_with_alpha_16, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn4a08.json: color_type=4 bit_depth=8
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn4a08.png: root.PixelFormat.greyscale_with_alpha_8, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn0g16.json: color_type=0 bit_depth=16
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn0g16.png: root.PixelFormat.greyscale_16, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn0g08.json: color_type=0 bit_depth=8
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn0g08.png: root.PixelFormat.greyscale_8, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\z03n2c08.json: color_type=2 bit_depth=8
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\z03n2c08.png: root.PixelFormat.truecolour_8, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn6a08.json: color_type=6 bit_depth=8
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn6a08.png: root.PixelFormat.truecolour_with_alpha_8, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\z09n2c08.json: color_type=2 bit_depth=8
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\z09n2c08.png: root.PixelFormat.truecolour_8, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn4a16.json: color_type=4 bit_depth=16
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn4a16.png: root.PixelFormat.greyscale_with_alpha_16, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn2c16.json: color_type=2 bit_depth=16
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn2c16.png: root.PixelFormat.truecolour_16, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn0g01.json: color_type=0 bit_depth=1
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn0g01.png: root.PixelFormat.greyscale_1, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\z06n2c08.json: color_type=2 bit_depth=8
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\z06n2c08.png: root.PixelFormat.truecolour_8, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\bgan6a08.json: color_type=6 bit_depth=8
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\bgan6a08.png: root.PixelFormat.truecolour_with_alpha_8, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn2c08.json: color_type=2 bit_depth=8
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn2c08.png: root.PixelFormat.truecolour_8, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn0g04.json: color_type=0 bit_depth=4
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn0g04.png: root.PixelFormat.greyscale_4, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\z00n2c08.json: color_type=2 bit_depth=8
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\z00n2c08.png: root.PixelFormat.truecolour_8, width=32, height=32
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\json\basn0g02.json: color_type=0 bit_depth=2
+info: C:\Users\jaune\Projects\jaune\png.zig\examples\decode\images\pngsuite\png\basn0g02.png: root.PixelFormat.greyscale_2, width=32, height=32
